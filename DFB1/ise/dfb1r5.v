@@ -145,10 +145,15 @@ wire fpu = AS | {FC,A[19:16]} != 7'b1110010; // co-processor decode
 wire ttram_access = ~DISABLE_ALTRAM | ( A[27:24] == 'hF | A[27:24] == 'h0 );
 wire rom_access =  ~DISABLE_FLASH_ROM | A[27:20] != 8'h0E; // Flash ROM
 wire dsp_access = A[27:8] != 20'h0FFA2;
-wire berr_ram = OPTION1 ? A[26:24] != 3'b101 : A[27:24] != 4'b1001; // 128MB / 64 switch
+
+// original code line below
+//wire berr_ram = OPTION1 ? A[26:24] != 3'b101 : A[27:24] != 4'b1001; // 128MB / 64 switch
+
+// Suavek dual boot mod added on 2025-10-07
+wire berr_ram = A[26:24] != 3'b101; // 64MB for 2025 Suavek DFB1 build
+//wire berr_ram = A[27:24] != 4'b1001; // 128MB suitable 
+
 wire reg_access = A[31:4] != 28'h00F1DFB; // our register F1DFxx
-
-
 reg flash_access = 1'b1;
 always @(negedge XAS ) begin
 	flash_access <= ~( ( A[23:20] == 4'hF ) & ( ( A[19:17] == 3'b100 ) | ( { A[19], |A[18:17] } == 2'b01 ) ) ); // F20000-F9FFFF -- F && ( 8/9 || 2-7 )
@@ -303,7 +308,8 @@ assign ROMCE = DISABLE ? rom_access : flash_access;
 assign ROMOE = DISABLE ? rom_access | ~XRW : flash_access | ~XRW;
 
 
-assign ROM_A19 = 1'b0;// A[19];
+//assign ROM_A19 = 1'b0;// A[19];  // original code line
+assign ROM_A19 = OPTION1; // bank switching by Option1 jumper added by Suavek on 2025-10-07
 
 assign LED[1] = BGK; 	// board master
 assign LED[2] = lowspeed; // speed
